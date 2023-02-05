@@ -66,7 +66,7 @@ def Gabor_filtering(gray, K_size=111, Sigma=10, Gamma=1.2, Lambda=10, Psi=0, ang
 
 def Gabor_process(img):
     # get shape
-    H, W, _ = img.shape
+    H, W = img.shape[0], img.shape[1]
 
     # gray scale
     gray = BGR2GRAY(img).astype(np.float32)
@@ -82,12 +82,12 @@ def Gabor_process(img):
     # each angle
     for i, A in enumerate(As):
         # gabor filtering
-        _out = Gabor_filtering(gray, K_size=7, Sigma=1.5, Gamma=1.2, Lambda=4, angle=A)
+        _out = Gabor_filtering(gray, K_size=111, Sigma=1.5, Gamma=1.2, Lambda=4, angle=A)
         # add gabor filtered image
         out += _out
 
     # scale normalization
     out = out / out.max() * 255
-    #out = out.astype(np.uint8)
+    out = out.astype(np.uint8)
 
     return out

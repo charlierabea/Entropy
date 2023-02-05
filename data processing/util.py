@@ -3,15 +3,71 @@ import numpy as np
 import gabor as gabor
 
 def do_otsu(img):
-    im2 = img.copy()
+    im2 = img.astype('uint8')
     _, im2 = cv2.threshold(im2,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     return(im2)
 
-def do_adaptive(img, kernel_size=5):
+def do_mean(img, kernel_size=5):
     im2 = img.copy()
     im2 = cv2.adaptiveThreshold(im2, 255, cv2.ADAPTIVE_THRESH_MEAN_C, 
                                 cv2.THRESH_BINARY, kernel_size, 0)
     return(im2)
+
+def do_gaussmean(img, kernel_size=5):
+    im2 = img.copy()
+    im2 = cv2.adaptiveThreshold(im2, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                                cv2.THRESH_BINARY, kernel_size, 0)
+    return(im2)
+
+'''
+def partialSum(y, j):
+    x = 0
+    for i in range(j + 1):
+        x += y[i]
+    return x
+
+def Percentile(data):
+    ptile = 0.5
+    avec = [0.0 for i in range(len(data))]
+
+    total = partialSum(data, len(data) - 1)
+    temp = 1.0
+    for i in range(len(data)):
+        avec[i] = abs((partialSum(data, i) / total) - ptile)
+        if avec[i] < temp:
+            temp = avec[i]
+            threshold = i   
+
+    return threshold
+
+def do_percentile(img):
+    im2 = img.copy()
+    _, im2 = cv2.threshold(im2,Percentile(img),255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    
+    return(im2)
+'''
+
+def partial_sum(y, j):
+    x = 0
+    for i in range(j + 1):
+        x += y[i]
+    return x
+
+def do_percentile(img):
+    data = img.flatten()
+    total = data.sum()
+    temp = float("inf")
+    threshold = 0
+    avec = [0] * 256
+    for i in range(256):
+        ptile = (i + 1) / 256.0
+        avec[i] = abs((partial_sum(data, i) / total) - ptile)
+        if avec[i] < temp:
+            temp = avec[i]
+            threshold = i
+    img[img > threshold] = 255
+    img[img <= threshold] = 0
+    return img
 
 def do_GaussianBlur(gray):
     kernel_size = 5
