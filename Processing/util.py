@@ -1,8 +1,37 @@
 import cv2
+import opsfaz as faz
 import numpy as np
-import gabor as gabor
-import math
+import drawfaz as draw
 
+def do_faz(img):
+    # read image
+    image = cv2.imread(img,0)
+    size = image.shape
+
+    # configure parameters
+    mm = 3
+    deep = 0
+    precision = 0.7
+
+    # call the function
+    faz_image, area, cnt = faz.detectFAZ(image, mm, deep, precision) 
+    # Outputs:
+    #	- faz is a binary image with the region of the FAZ as mask
+    #	- area is the area of the FAZ
+    #	- cnt is the contour in opencv that represents the contour of the FAZ
+    
+    # we obtain the faz mask
+    mask = cv2.drawContours(image.copy(), cnt, -1, (0,0,0), -1)
+    
+     # we obtain the faz
+    faz255 = faz_image*255
+     
+    return faz255
+    
+def do_edge(img):
+    edges = cv2.Canny(img, 50, 150)
+    
+    
 def do_otsu(img):
     im2 = img.astype('uint8')
     _, im2 = cv2.threshold(im2,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
