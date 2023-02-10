@@ -51,7 +51,7 @@ def Gabor_filtering(gray, K_size=111, Sigma=10, Gamma=1.2, Lambda=10, Psi=0, ang
     # prepare out image
     out = np.zeros((H, W), dtype=np.float32)
 
-    # get gabor filter
+    # get gabor filtr
     gabor = Gabor_filter(K_size=K_size, Sigma=Sigma, Gamma=Gamma, Lambda=Lambda, Psi=0, angle=angle)
 
     # filtering
@@ -66,7 +66,7 @@ def Gabor_filtering(gray, K_size=111, Sigma=10, Gamma=1.2, Lambda=10, Psi=0, ang
 
 def Gabor_process(img):
     # get shape
-    H, W = img.shape[0], img.shape[1]
+    H, W, _ = img.shape
 
     # gray scale
     gray = BGR2GRAY(img).astype(np.float32)
@@ -88,6 +88,9 @@ def Gabor_process(img):
 
     # scale normalization
     out = out / out.max() * 255
-    out = out.astype(np.uint8)
-
+    #out = out.astype(np.uint8)
+    kernel_size =5
+    out = cv2.MedianBlur(out,(kernel_size, kernel_size), 0)
+    out = out / out.max() * 255
+    
     return out

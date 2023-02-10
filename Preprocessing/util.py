@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import gabor as gabor
+import faz
 import math
 
 #otsu：找大血管
@@ -60,28 +61,56 @@ def do_canny (im,t1=50,t2=100):
 	edges = cv2.Canny(edges,t1,t2)
 	return edges
 
-def do_gabor(img):
-    return gabor.Gabor_process(img)
-
-def do_erosiondilation(img):
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    thresh = cv2.threshold(gray, 75, 255, cv2.THRESH_BINARY)[1]
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
-    opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)
-
-    cnts = cv2.findContours(opening, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    cnts = cnts[0] if len(cnts) == 2 else cnts[1]
-    for c in cnts:
-        area = cv2.contourArea(c)
-        if area < 100:
-            cv2.drawContours(opening, [c], -1, (0,0,0), -1) 
-    
-    return opening
-
-def do_GaussianBlur(gray):
-    kernel_size = 5
+def do_GaussianBlur(gray, kernel_size = 5):
     blur_gray = cv2.GaussianBlur(gray,(kernel_size, kernel_size), 0)
     return blur_gray
+
+def do_medianBlur(gray, kernel_size = 5):
+    blur_gray = cv2.medianBlur(gray, kernal_size)
+    return blur_gray
+
+def fill_socket(image):
+    image_ = image.copy()
+    h, w = image.shape[:2]
+    mask = np.zeros((h+2, w+2), np.uint8)
+    isbreak = False
+    for i in range(image_.shape[0]):
+        for j in range(image_.shape[1]):
+            if(image_[i][j]==0):
+                seedPoint=(i,j)
+                isbreak = True
+                break
+        if(isbreak):
+            break
+    cv2.floodFill(image_, mask,seedPoint, 255)
+    im_floodfill_inv = cv2.bitwise_not(image_)
+    image = image | im_floodfill_inv
+    return image
+
+def do_faz(img):
+    # read image
+    size = img.shape
+
+    # configure parameters
+    mm = 3
+    deep = 0
+    precision = 0.7
+
+    # call the function
+    faz_image, area, cnt = faz.detectFAZ(img, mm, deep, precision) 
+    # Outputs:
+    #	- faz is a binary image with the region of the FAZ as mask
+    #	- area is the area of the FAZ
+    #	- cnt is the contour in opencv that represents the contour of the FAZ
+    
+    # we obtain the faz mask
+    #mask = cv2.drawContours(image.copy(), cnt, -1, (0,0,0), -1)
+    
+     # we obtain the faz
+    faz255 = faz_image*255
+    faz255 = fill_socket(faz255)
+    return faz255
+
 #想弄但弄不好的percentile跟moment
 '''
 def partial_sum(y, j):
