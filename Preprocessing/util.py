@@ -3,29 +3,48 @@ import numpy as np
 import gabor as gabor
 import math
 
+#otsu：找大血管
 def do_otsu(img):
     im2 = img.astype('uint8')
     _, im2 = cv2.threshold(im2,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     return(im2)
 
+#triangle：比otsu多一點
 def do_triangle(img):
     im2 = img.astype('uint8')
     _, im2 = cv2.threshold(im2,0,255,cv2.THRESH_BINARY+cv2.THRESH_TRIANGLE)
     return(im2)
 
-def do_mean(img, kernel_size=11):
+#mean：Kernal 設大，外側只留大血管
+def do_mean(img, kernel_size=333):
     im2 = img.copy()
     im2 = cv2.adaptiveThreshold(im2, 255, cv2.ADAPTIVE_THRESH_MEAN_C, 
                                 cv2.THRESH_BINARY, kernel_size, 2)
     return(im2)
 
+#gaussian：什麼都有
 def do_gaussmean(img, kernel_size=11):
     im2 = img.copy()
     im2 = cv2.adaptiveThreshold(im2, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
                                 cv2.THRESH_BINARY, kernel_size, 2)
     return(im2)
 
-def do_canny (im,t1=50,t2=150):
+#二值化後把小雜點去掉
+def do_fillholes(img, kernal_size = (3,3), hole_area = 150):
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, kernal_size)
+    im2 = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel, iterations=1)
+    cnts = cv2.findContours(im2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cnts = cnts[0] if len(cnts) == 2 else cnts[1]
+
+    for c in cnts:
+        area = cv2.contourArea(c)
+        if hole_area < 150:
+            cv2.drawContours(im2, [c], -1, (0,0,0), -1)
+    
+    return im2
+
+#canny找邊緣
+def do_canny (im,t1=50,t2=100):
 	"""
 	This function simplifies the use
 	of canny edge detector
@@ -36,9 +55,9 @@ def do_canny (im,t1=50,t2=150):
 		- gamma: gamma parameter to canny edge detector
 	"""
 	im2 = im.copy()
-	edges = cv2.GaussianBlur(im2, (15,15))
+	edges = cv2.GaussianBlur(im2, (15,15), 0)
 	edges = cv2.normalize(edges,edges,0,255,cv2.NORM_MINMAX)
-	edges = cv2.Canny(np.uint8(edges),t1,t2)
+	edges = cv2.Canny(edges,t1,t2)
 	return edges
 
 def do_gabor(img):
@@ -58,6 +77,11 @@ def do_erosiondilation(img):
             cv2.drawContours(opening, [c], -1, (0,0,0), -1) 
     
     return opening
+
+def do_GaussianBlur(gray):
+    kernel_size = 5
+    blur_gray = cv2.GaussianBlur(gray,(kernel_size, kernel_size), 0)
+    return blur_gray
 #想弄但弄不好的percentile跟moment
 '''
 def partial_sum(y, j):
@@ -130,8 +154,5 @@ def do_Moments(data):
 
     return threshold
 '''
-def do_GaussianBlur(gray):
-    kernel_size = 5
-    blur_gray = cv2.GaussianBlur(gray,(kernel_size, kernel_size), 0)
-    return blur_gray
+
 
