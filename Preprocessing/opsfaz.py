@@ -3,7 +3,7 @@ import cv2
 import drawfaz as draw
 import numpy as np
 from skimage.morphology import skeletonize
-from util import *
+import faz_util
 
 
 def detectFAZ(imOCTorig, mm, prof, precision):
@@ -26,21 +26,21 @@ def detectFAZ(imOCTorig, mm, prof, precision):
 	# tophat
 	ss = ((size[0]/80)*2-mm+3)
 	ss = ss*2-1
-	imOCT = morph('tophat',imOCT,ss)
+	imOCT = faz_util.morph('tophat',imOCT,ss)
 
 	# canny edge detector
-	edges, imClosed = edges_extraction (imOCT,prof,mm,precision)
+	edges, imClosed = faz_util.edges_extraction (imOCT,prof,mm,precision)
 
 	im = imClosed.copy()
 	# mask of the FAZ
-	fazMask = find_mask(im,prof,mm)
+	fazMask = faz_util.find_mask(im,prof,mm)
 
 	# select the highest candidate
 	image = fazMask.copy()
 	image1 = cv2.convertScaleAbs(image) 
 	contours, hierachy = cv2.findContours(image1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 	cogidos = []
-	cnt,cogidos = higest_contour (contours, cogidos)
+	cnt,cogidos = faz_util.higest_contour (contours, cogidos)
 	m = cv2.contourArea(cnt)
 	fazAreainMM = m*(mm*mm)/(size[0]*size[1])
 
@@ -50,14 +50,14 @@ def detectFAZ(imOCTorig, mm, prof, precision):
 	
 	# make region growing
 	
-	reg = region_growing(imOCT, im*1.0, fazAreainMM, prof, 4, precision)
+	reg = faz_util.region_growing(imOCT, im*1.0, fazAreainMM, prof, 4, precision)
 
-	reg = morph ('open', reg, 3)
-	reg = morph ('closed', reg, 3)
+	reg = faz_util.morph ('open', reg, 3)
+	reg = faz_util.morph ('closed', reg, 3)
 	image1 = cv2.convertScaleAbs(reg) 
 	contours, hierachy = cv2.findContours(image1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 	cogidos = []
-	cnt,cogidos = higest_contour (contours, cogidos)
+	cnt,cogidos = faz_util.higest_contour (contours, cogidos)
 
 	m = cv2.contourArea(cnt)
 	fazAreainMM = m*(mm*mm)/(size[0]*size[1])

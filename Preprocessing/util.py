@@ -1,8 +1,7 @@
 import cv2
 import numpy as np
 import gabor as gabor
-import faz
-import math
+import opsfaz as faz
 
 #otsu：找大血管
 def do_otsu(img):
@@ -31,7 +30,7 @@ def do_gaussmean(img, kernel_size=11):
     return(im2)
 
 #二值化後把小雜點去掉
-def do_fillholes(img, kernal_size = (3,3), hole_area = 150):
+def do_fillholes(img, kernal_size = (3,3), bound_size = 20):
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, kernal_size)
     im2 = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel, iterations=1)
     cnts = cv2.findContours(im2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -39,7 +38,7 @@ def do_fillholes(img, kernal_size = (3,3), hole_area = 150):
 
     for c in cnts:
         area = cv2.contourArea(c)
-        if hole_area < 150:
+        if area < bound_size:
             cv2.drawContours(im2, [c], -1, (0,0,0), -1)
     
     return im2
