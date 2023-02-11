@@ -89,8 +89,7 @@ def Gabor_process(img):
     # scale normalization
     out = out / out.max() * 255
     #out = out.astype(np.uint8)
-    kernel_size =5
-    out = cv2.MedianBlur(out,(kernel_size, kernel_size), 0)
+    out = cv2.medianBlur(out, 5)
     out = out / out.max() * 255
     
     return out

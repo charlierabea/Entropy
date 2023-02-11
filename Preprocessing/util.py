@@ -18,13 +18,15 @@ def do_triangle(img):
 #mean：Kernal 設大，外側只留大血管
 def do_mean(img, kernel_size=333):
     im2 = img.copy()
+    im2 = im2.astype(np.uint8)
     im2 = cv2.adaptiveThreshold(im2, 255, cv2.ADAPTIVE_THRESH_MEAN_C, 
                                 cv2.THRESH_BINARY, kernel_size, 2)
     return(im2)
 
 #gaussian：什麼都有
-def do_gaussmean(img, kernel_size=11):
+def do_gaussmean(img, kernel_size=7):
     im2 = img.copy()
+    im2 = im2.astype(np.uint8)
     im2 = cv2.adaptiveThreshold(im2, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
                                 cv2.THRESH_BINARY, kernel_size, 2)
     return(im2)
@@ -45,27 +47,28 @@ def do_fillholes(img, kernal_size = (3,3), bound_size = 20):
 
 #canny找邊緣
 def do_canny (im,t1=50,t2=100):
-	"""
-	This function simplifies the use
-	of canny edge detector
+    """
+    This function simplifies the use
+    of canny edge detector
 
-	inputs:
-		- im: OCT-A image
-		- t1 and t2:  thresholds of canny edge detector
-		- gamma: gamma parameter to canny edge detector
-	"""
-	im2 = im.copy()
-	edges = cv2.GaussianBlur(im2, (15,15), 0)
-	edges = cv2.normalize(edges,edges,0,255,cv2.NORM_MINMAX)
-	edges = cv2.Canny(edges,t1,t2)
-	return edges
+    inputs:
+        - im: OCT-A image
+        - t1 and t2:  thresholds of canny edge detector
+        - gamma: gamma parameter to canny edge detector
+    """
+    im2 = im.copy()
+    edges = cv2.GaussianBlur(im2, (15,15), 0)
+    edges = cv2.normalize(edges,edges,0,255,cv2.NORM_MINMAX)
+    edges = edges.astype(np.uint8)
+    edges = cv2.Canny(edges,t1,t2)
+    return edges
 
 def do_GaussianBlur(gray, kernel_size = 5):
     blur_gray = cv2.GaussianBlur(gray,(kernel_size, kernel_size), 0)
     return blur_gray
 
-def do_medianBlur(gray, kernel_size = 5):
-    blur_gray = cv2.medianBlur(gray, kernal_size)
+def do_medianBlur(gray):
+    blur_gray = cv2.medianBlur(gray, 5)
     return blur_gray
 
 def fill_socket(image):
@@ -82,9 +85,9 @@ def fill_socket(image):
         if(isbreak):
             break
     cv2.floodFill(image_, mask,seedPoint, 255)
-    im_floodfill_inv = cv2.bitwise_not(image_)
-    image = image | im_floodfill_inv
-    return image
+    im_floodfill_inv = cv2.bitwise_not(image_.astype(np.uint8))
+    imageout = image.astype(np.uint8) | im_floodfill_inv
+    return imageout
 
 def do_faz(img):
     # read image
@@ -93,7 +96,7 @@ def do_faz(img):
     # configure parameters
     mm = 3
     deep = 0
-    precision = 0.7
+    precision = 0.5
 
     # call the function
     faz_image, area, cnt = faz.detectFAZ(img, mm, deep, precision) 
@@ -106,8 +109,8 @@ def do_faz(img):
     #mask = cv2.drawContours(image.copy(), cnt, -1, (0,0,0), -1)
     
      # we obtain the faz
-    faz255 = faz_image*255
-    faz255 = fill_socket(faz255)
+    #faz255 = faz_image*255
+    faz255 = fill_socket(faz_image)
     return faz255
 
 #想弄但弄不好的percentile跟moment
