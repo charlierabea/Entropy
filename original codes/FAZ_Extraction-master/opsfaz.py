@@ -40,7 +40,8 @@ def detectFAZ(imOCTorig, mm, prof, precision):
 	image1 = cv2.convertScaleAbs(image) 
 	contours, hierachy = cv2.findContours(image1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 	cogidos = []
-	cnt,cogidos = higest_contour (contours, cogidos)
+	cnt,cogidos = higest_contour(contours, cogidos)
+ 	print(cnt)
 	m = cv2.contourArea(cnt)
 	fazAreainMM = m*(mm*mm)/(size[0]*size[1])
 
