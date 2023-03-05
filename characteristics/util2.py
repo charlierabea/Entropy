@@ -22,7 +22,7 @@ def calculate_vci(octa_image):
     vci = props[0].perimeter / props[0].area
     return vci
 
-#binary
+#image_entropy: 
 def calculate_image_entropy(image_path):
     # Open the image and convert it to grayscale
     with Image.open(image_path) as image:
@@ -66,6 +66,7 @@ def calculate_bvc(segmented_image):
     bvc = numerator / denominator
     return bvc
 
+#Vessel perimeter index
 def calculate_vpi(image):
     '''
     VPI measures the ratio between overall contour length of blood vessel boundaries and total blood vessel area in the segmented vessel map
