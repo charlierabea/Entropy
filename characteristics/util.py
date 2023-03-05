@@ -27,6 +27,7 @@ Automated measurement of retinal vessel density in optical
 coherence tomography angiography images using a vesselness 
 filter. Journal of medical systems, 43(10), 327.
 '''
+
 def image_vd(image_path):
     # Open the image and convert it to grayscale
     # Load OCTA image
@@ -80,59 +81,3 @@ def calculate_vessel_length_density(octa_image, roi_mask):
 #fazcircularity
 
 #vessel_diameter
-def calculate_vessel_diameter(image):
-    # Convert the image to grayscale
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    
-    # Apply a Gaussian filter to smooth the image
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    
-    # Apply a Canny edge detector to detect edges
-    edges = cv2.Canny(blurred, 50, 150, apertureSize=3)
-    
-    # Find contours in the image
-    contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    
-    # Find the largest contour
-    max_contour = max(contours, key=cv2.contourArea)
-    
-    # Calculate the minimum enclosing circle of the contour
-    (x, y), radius = cv2.minEnclosingCircle(max_contour)
-    
-    # Calculate vessel diameter
-    diameter = radius * 2
-    
-    return diameter
-
-#vessel tortuosity
-def calculate_vessel_tortuosity(image):
-    # Convert the image to grayscale
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    
-    # Apply a Gaussian filter to smooth the image
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    
-    # Apply a Canny edge detector to detect edges
-    edges = cv2.Canny(blurred, 50, 150, apertureSize=3)
-    
-    # Find contours in the image
-    contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    
-    # Find the largest contour
-    max_contour = max(contours, key=cv2.contourArea)
-    
-    # Calculate the arc length of the contour
-    arc_length = cv2.arcLength(max_contour, True)
-    
-    # Calculate the Euclidean distance between the first and last points of the contour
-    euclidean_distance = np.linalg.norm(max_contour[0] - max_contour[-1])
-    
-    # Calculate vessel tortuosity
-    tortuosity = arc_length / euclidean_distance
-    
-    return tortuosity
-
-
-
-
-
