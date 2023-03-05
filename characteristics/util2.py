@@ -3,10 +3,9 @@ import cv2
 import matplotlib.pyplot as plt
 from PIL import Image
 from skimage.measure import regionprops
-from scipy import ndimage
-from scipy.ndimage import morphology
+from skimage.morphology import skeletonize
 from scipy.spatial import distance
-from scipy.signal import argrelextrema
+from skimage.measure import label, regionprops
 
 # Tang, F. Y., Ng, D. S., Lam, A., Luk, F., Wong, R., Chan, C., Mohamed, S., Fong, A., Lok, J., Tso, T., Lai, F., Brelen, M., Wong, T. Y., Tham, C. C., & Cheung, C. Y. (2017). Determinants of Quantitative Optical Coherence Tomography Angiography Metrics in Patients with Diabetes. Scientific reports, 7(1), 2575. https://doi.org/10.1038/s41598-017-02767-0
 
@@ -50,32 +49,40 @@ def calculate_bvd(octa_image):
 #skeleton
 def calculate_bvt(octa_image):
     # calculate blood vessel tortuosity
-    skeleton = morphology.skeletonize(octa_image)
+    skeleton = skeletonize(octa_image)
     distance_map = distance.squareform(distance.pdist(np.where(skeleton)))
     mean_distance = np.mean(distance_map)
     std_distance = np.std(distance_map)
     bvt = std_distance / mean_distance
     return bvt
 
-
-def calculate_bvc(octa_image):
-    # calculate blood vessel caliber
-    skeleton = morphology.skeletonize(octa_image)
-    endpoints = morphology.endpoints(skeleton)
-    endpoint_positions = np.argwhere(endpoints) 
-    distances = distance.squareform(distance.pdist(endpoint_positions))
-    max_distance = np.max(distances)
-    bvc = max_distance / len(distances)
+def calculate_bvc(segmented_image):
+    # create skeletonized vessel map
+    skeleton = skeletonize(segmented_image)
+    # calculate the numerator and denominator of the BVC equation
+    numerator = np.sum(segmented_image)
+    denominator = np.sum(skeleton)
+    # calculate BVC
+    bvc = numerator / denominator
     return bvc
 
-def calculate_vpi(octa_image):
-    # calculate vessel perimeter index
-    skeleton = morphology.skeletonize(octa_image)
-    endpoints = morphology.endpoints(skeleton)
-    endpoint_positions = np.argwhere(endpoints)
-    distances = distance.squareform(distance.pdist(endpoint_positions))
-    max_distance = np.max(distances)
-    vpi = np.sum(skeleton) / (2 * np.pi * max_distance)
+def calculate_vpi(image):
+    '''
+    VPI measures the ratio between overall contour length of blood vessel boundaries and total blood vessel area in the segmented vessel map
+    '''
+    # Convert image to binary mask
+    mask = np.where(image > 0, 1, 0).astype(np.uint8)
+
+    # Find contours
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Calculate perimeter and area
+    perimeter = np.sum([cv2.arcLength(contour, True) for contour in contours])
+    area = np.sum(mask)
+
+    # Calculate VPI
+    vpi = perimeter / area
+
     return vpi
 
 def fractal_dimension(Z):
@@ -132,16 +139,26 @@ def calculate_fd(octa_image):
 
 # faz
 def calculate_faz_ci(faz_image):
-    # calculate FAZ contour irregularity
-    faz_area = cv2.countNonZero(faz_image)
-    
-    # Calculate the perimeter of the FAZ
-    contours, _ = cv2.findContours(faz_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    faz_perimeter = cv2.arcLength(contours[0], True)
+    try:
+        # Convert to grayscale if necessary
+        if faz_image.ndim == 3:
+            faz_image = cv2.cvtColor(faz_image, cv2.COLOR_BGR2GRAY)
 
-    # Calculate the FAZ circularity
-    faz_ci = (4 * np.pi * faz_area) / (faz_perimeter ** 2)
-    
-    return faz_area, faz_ci
+        # calculate FAZ contour irregularity
+        size = faz_image.shape
+        faz_area = cv2.countNonZero(faz_image)/(size[0]*size[1])
 
+        # Calculate the perimeter of the FAZ
+        contours, _ = cv2.findContours(faz_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(faz_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if len(contours) == 0:
+            return 0, 0  # or some other default values
+        faz_perimeter = cv2.arcLength(contours[0], True)
 
+        # Calculate the FAZ circularity
+        faz_ci = (4 * np.pi * faz_area) / (faz_perimeter ** 2)
+
+        return faz_ci, faz_area
+    except ZeroDivisionError:
+        print("Error: division by zero")
+        return None, None
