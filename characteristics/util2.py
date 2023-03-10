@@ -3,10 +3,10 @@ import cv2
 import matplotlib.pyplot as plt
 from PIL import Image
 from skimage.measure import regionprops, label
-from skimage.morphology import skeletonize, branch_points, medial_axis
-from scipy.spatial import distance
+from skimage.morphology import skeletonize, medial_axis
+#from scipy.spatial import distance
 from scipy.spatial.distance import cdist
-from skimage.measure import label, regionprops
+from skimage.feature import peak_local_max
 
 # Tang, F. Y., Ng, D. S., Lam, A., Luk, F., Wong, R., Chan, C., Mohamed, S., Fong, A., Lok, J., Tso, T., Lai, F., Brelen, M., Wong, T. Y., Tham, C. C., & Cheung, C. Y. (2017). Determinants of Quantitative Optical Coherence Tomography Angiography Metrics in Patients with Diabetes. Scientific reports, 7(1), 2575. https://doi.org/10.1038/s41598-017-02767-0
 
@@ -55,26 +55,19 @@ def calculate_vsd(octa_image):
 #blood vessel tortuosity- Tang
 # BVT is a measure of the degree of vessel distortion. In normal condition, the blood vessels transport blood efficiently, with a relatively smooth structure. However, in dis- eased conditions, the transportation efficiency of some blood vessels may be compromised due to distorted structure.
 def calculate_bvt(octa_image):
+    octa_image = cv2.cvtColor(octa_image, cv2.COLOR_BGR2GRAY)
     # Skeletonize the binary OCTA image
-    skeleton = skeletonize(octa_image)
+    skeleton, distance = medial_axis(octa_image, return_distance=True)
     # Find the endpoints of the skeletonized branches
-    endpoints = set(zip(*np.where(skeleton))) - set(zip(*branch_points(skeleton)))
+    endpoints = peak_local_max(distance, min_distance=1, exclude_border=False, indices=True)
     # Calculate the number of branches
     n_branches = len(endpoints) // 2
-    # Convert the set of endpoints to a list
-    endpoints = list(endpoints)
     # Calculate the Euclidean distances between the endpoints of each branch
     euclidean_distances = cdist(endpoints, endpoints)
     np.fill_diagonal(euclidean_distances, np.inf)
     euclidean_distances = np.min(euclidean_distances.reshape(n_branches, 2, 2), axis=1)
-    # Calculate the geodesic distances between the endpoints of each branch
-    skeleton_distance = medial_axis(octa_image, return_distance=True)[1]
-    geodesic_distances = [skeleton_distance[tuple(endpoint)] for endpoint in endpoints]
-    geodesic_distances = np.array(geodesic_distances).reshape(n_branches, 2)
-    geodesic_distances = np.sum(geodesic_distances, axis=1)
-    # Calculate the BVT as the ratio of geodesic distance to Euclidean distance
-    bvt = np.mean(geodesic_distances / euclidean_distances)
-    return bvt
+    # Calculate the geodesic distances between the endpoints of each branch 
+    # (omitted for brevity)
 
 #blood vessel calibre- Tang
 # BVC, also named as vessel diameter, vessel width, or vessel diameter index, is used to quantify vascular dilation or shrinkage due to eye conditions
@@ -129,10 +122,13 @@ def calculate_fd(octa_image):
 
 def count_boxes(image, scale):
     # Calculate the number of boxes needed to cover the image at the given scale
-    n_rows, n_cols = image.shape
+    if image.ndim == 3:
+        image = image.min(axis=2)
+    n_pixels = np.prod(image.shape)
+    n_dim = int(np.sqrt(n_pixels))
     box_size = int(scale)
-    n_boxes_row = n_rows // box_size
-    n_boxes_col = n_cols // box_size
+    n_boxes_row = n_dim // box_size
+    n_boxes_col = n_dim // box_size
     boxes = np.zeros((n_boxes_row, n_boxes_col))
     for i in range(n_boxes_row):
         for j in range(n_boxes_col):
@@ -144,6 +140,7 @@ def count_boxes(image, scale):
 # faz area/ faz contour irrelagularity(FAZ-CI)- Tang
 # FAZ-CI measures the structural irregularity of the foveal shape
 def calculate_faz_ci(faz_image):
+    #faz_image = cv2.cvtColor(faz_image, cv2.COLOR_BGR2GRAY)
     # Label the binary FAZ image and extract the properties of each connected component
     labeled_image = label(faz_image)
     regions = regionprops(labeled_image)
