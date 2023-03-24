@@ -54,20 +54,20 @@ def calculate_vsd(octa_image):
 
 #blood vessel tortuosity- Tang
 # BVT is a measure of the degree of vessel distortion. In normal condition, the blood vessels transport blood efficiently, with a relatively smooth structure. However, in dis- eased conditions, the transportation efficiency of some blood vessels may be compromised due to distorted structure.
-def calculate_bvt(octa_image):
-    octa_image = cv2.cvtColor(octa_image, cv2.COLOR_BGR2GRAY)
-    # Skeletonize the binary OCTA image
-    skeleton, distance = medial_axis(octa_image, return_distance=True)
-    # Find the endpoints of the skeletonized branches
-    endpoints = peak_local_max(distance, min_distance=1, exclude_border=False, indices=True)
-    # Calculate the number of branches
-    n_branches = len(endpoints) // 2
-    # Calculate the Euclidean distances between the endpoints of each branch
-    euclidean_distances = cdist(endpoints, endpoints)
-    np.fill_diagonal(euclidean_distances, np.inf)
-    euclidean_distances = np.min(euclidean_distances.reshape(n_branches, 2, 2), axis=1)
-    # Calculate the geodesic distances between the endpoints of each branch 
-    # (omitted for brevity)
+# def calculate_bvt(octa_image):
+#     octa_image = cv2.cvtColor(octa_image, cv2.COLOR_BGR2GRAY)
+#     # Skeletonize the binary OCTA image
+#     skeleton, distance = medial_axis(octa_image, return_distance=True)
+#     # Find the endpoints of the skeletonized branches
+#     endpoints = peak_local_max(distance, min_distance=1, exclude_border=False)
+#     # Calculate the number of branches
+#     n_branches = len(endpoints) // 2
+#     # Calculate the Euclidean distances between the endpoints of each branch
+#     euclidean_distances = cdist(endpoints, endpoints)
+#     np.fill_diagonal(euclidean_distances, np.inf)
+#     euclidean_distances = np.min(euclidean_distances.reshape(n_branches, 2, 2), axis=1)
+#     # Calculate the geodesic distances between the endpoints of each branch 
+#     # (omitted for brevity)
 
 #blood vessel calibre- Tang
 # BVC, also named as vessel diameter, vessel width, or vessel diameter index, is used to quantify vascular dilation or shrinkage due to eye conditions
