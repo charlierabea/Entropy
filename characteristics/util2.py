@@ -154,6 +154,7 @@ def calculate_faz_ci(faz_image):
     # Calculate the perimeter of the reference circle
     reference_perimeter = 2 * np.pi * faz_radius
     # Calculate the FAZ-CI as the ratio of the FAZ perimeter to the reference circle perimeter
+    faz_area = faz_area/ (faz_image.shape[0]*faz_image.shape[1])
     faz_ci = faz_perimeter / reference_perimeter
     return faz_area, faz_ci
 
