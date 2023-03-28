@@ -31,7 +31,7 @@ def do_findlarge(img):
     cnts = cnts[0] if len(cnts) == 2 else cnts[1]
     for c in cnts:
         area = cv2.contourArea(c)
-        if area < 200:
+        if area < 500:
             cv2.drawContours(opening, [c], -1, (0,0,0), -1)
                 
     return(im2)
