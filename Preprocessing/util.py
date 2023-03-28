@@ -3,6 +3,12 @@ import numpy as np
 import gabor as gabor
 import opsfaz as faz
 
+#binary：OCTA-700中把所有細節呈現（失敗）
+def do_binary(img):
+    im2 = img.astype('uint8')
+    _, im2 = cv2.threshold(im2,30,255,cv2.THRESH_BINARY)
+    return(im2)
+
 #otsu：找大血管
 def do_otsu(img):
     im2 = img.astype('uint8')
