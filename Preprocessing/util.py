@@ -22,11 +22,11 @@ def do_triangle(img):
     return(im2)
 
 #mean：Kernal 設大，外側只留大血管
-def do_mean(img, kernel_size=333):
+def do_mean(img, kernel_size=31):
     im2 = img.copy()
     im2 = im2.astype(np.uint8)
     im2 = cv2.adaptiveThreshold(im2, 255, cv2.ADAPTIVE_THRESH_MEAN_C, 
-                                cv2.THRESH_BINARY, kernel_size, 2)
+                                cv2.THRESH_BINARY, kernel_size, -10)
     return(im2)
 
 #gaussian：什麼都有
