@@ -31,13 +31,27 @@ def calculate_image_entropy(image_path):
     
 # blood vessel density(BVD)- Tang
 # reflects the ratio of the image area occupied by the blood vessels
-def calculate_bvd(octa_image):
-    # Calculate the sum of pixels occupied by vessels
-    vessel_pixels = np.sum(octa_image)
-    # Calculate the total number of pixels in the image
-    total_pixels = np.size(octa_image)
-    # Calculate the vessel density as the ratio of vessel pixels to total pixels
-    vessel_density = vessel_pixels / total_pixels
+# def calculate_bvd(octa_image):
+#     # Calculate the sum of pixels occupied by vessels
+#     vessel_pixels = np.sum(octa_image)
+#     # Calculate the total number of pixels in the image
+#     total_pixels = np.size(octa_image)
+#     # Calculate the vessel density as the ratio of vessel pixels to total pixels
+#     vessel_density = vessel_pixels / total_pixels
+#     return vessel_density
+
+def calculate_bvd(image_path):
+    # Open the image and convert it to grayscale
+    # Load OCTA image
+    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    
+    #Apply thresholding to segment blood vessels
+    threshold = 127
+    ret, thresh = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
+
+    # Calculate vessel density as the proportion of non-zero pixels in the image
+    vessel_density = np.count_nonzero(thresh) / (img.shape[0] * img.shape[1])
+
     return vessel_density
 
 #vessel skeleton density(VSD)- Tang
