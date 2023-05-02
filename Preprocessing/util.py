@@ -102,7 +102,7 @@ def do_faz(img):
     # configure parameters
     mm = 3
     deep = 0
-    precision = 0.5
+    precision = 1.0
 
     # call the function
     faz_image, area, cnt = faz.detectFAZ(img, mm, deep, precision) 
